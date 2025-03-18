@@ -18,7 +18,7 @@
     },
     "location": {
       "type": "string",
-      "defaultValue": "East US",
+      "defaultValue": "Central US",
       "metadata": {
         "description": "Azure region for deployment"
       }
