@@ -2,6 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "resourceGroupName": {
+      "type": "string",
+      "defaultValue": "fastapi-rg",
+      "metadata": {
+        "description": "Name of the Resource Group"
+      }
+    },
     "webAppName": {
       "type": "string",
       "defaultValue": "fastapi-webapp-123",

@@ -1,17 +1,36 @@
-name: Deploy FastAPI to Azure Web App
+name: Deploy FastAPI with PostgreSQL to Azure
 
 on:
   push:
     branches:
-      - dev  # Change if using another branch
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-    
+
     - name: Checkout Code
       uses: actions/checkout@v3
+
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Create Resource Group
+      run: |
+        az group create --name fastapi-rg --location "East US"
+
+    - name: Deploy ARM Template (PostgreSQL + WebApp)
+      uses: azure/arm-deploy@v1
+      with:
+        scope: resourcegroup
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        resourceGroupName: fastapi-rg
+        template: azuredeploy.json
+        parameters: "adminPassword=${{ secrets.DB_ADMIN_PASSWORD }}"
+        deploymentMode: Incremental
 
     - name: Set up Python
       uses: actions/setup-python@v3
@@ -24,20 +43,8 @@ jobs:
         source venv/bin/activate
         pip install -r requirements.txt
 
-    - name: Deploy ARM Template
-      uses: azure/arm-deploy@v1
-      with:
-        scope: resourcegroup
-        resourceGroupName: my-sample-resource-group  # Change this
-        template: azuredeploy.json
-        parameters: "adminPassword=${{ secrets.DB_ADMIN_PASSWORD }}"
-        deploymentMode: Incremental
-        credentials: ${{ secrets.AZURE_CREDENTIALS }}
-
     - name: Deploy FastAPI App to Azure Web Apps
       uses: azure/webapps-deploy@v2
       with:
-        app-name: fastapi-webapp-123  # Change this
+        app-name: fastapi-webapp-123
         package: .
-        slot-name: production
-        credentials: ${{ secrets.AZURE_CREDENTIALS }}
