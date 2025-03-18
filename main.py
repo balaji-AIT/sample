@@ -40,7 +40,6 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-# Routes
 @app.get("/")
 async def root():
     return {"message": "FastAPI + PostgreSQL"}
@@ -48,6 +47,7 @@ async def root():
 @app.post("/users/")
 async def create_user(name: str, db: AsyncSession = Depends(get_db)):
     new_user = User(name=name)
+    print(new_user)
     db.add(new_user)
     await db.commit()
     return {"id": new_user.id, "name": new_user.name}
