@@ -1,0 +1,90 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "webAppName": {
+      "type": "string",
+      "defaultValue": "my-fastapi-app"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "East US"
+    },
+    "skuName": {
+      "type": "string",
+      "defaultValue": "B1"
+    },
+    "postgresServerName": {
+      "type": "string",
+      "defaultValue": "myfastapipgserver"
+    },
+    "postgresDbName": {
+      "type": "string",
+      "defaultValue": "fastapi_db"
+    },
+    "postgresUsername": {
+      "type": "string",
+      "defaultValue": "fastapi_admin"
+    },
+    "postgresPassword": {
+      "type": "securestring"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "apiVersion": "2021-06-01",
+      "name": "[parameters('postgresServerName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "administratorLogin": "[parameters('postgresUsername')]",
+        "administratorLoginPassword": "[parameters('postgresPassword')]",
+        "version": "14",
+        "storage": {
+          "storageSizeGB": 32
+        }
+      },
+      "sku": {
+        "name": "B_Standard_B1ms",
+        "tier": "Burstable",
+        "capacity": 1
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2021-02-01",
+      "name": "[parameters('webAppName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('skuName')]",
+        "tier": "Basic"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2021-02-01",
+      "name": "[parameters('webAppName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('webAppName'))]",
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('postgresServerName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('webAppName'))]"
+      },
+      "resources": [
+        {
+          "type": "config",
+          "apiVersion": "2021-02-01",
+          "name": "appsettings",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
+          ],
+          "properties": {
+            "DATABASE_URL": "[concat('postgresql+asyncpg://', parameters('postgresUsername'), ':', parameters('postgresPassword'), '@', parameters('postgresServerName'), '.postgres.database.azure.com/', parameters('postgresDbName'))]"
+          }
+        }
+      ]
+    }
+  ]
+}
