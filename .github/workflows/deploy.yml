@@ -3,7 +3,7 @@ name: Deploy FastAPI with PostgreSQL to Azure
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   build-and-deploy:
