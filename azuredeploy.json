@@ -50,6 +50,10 @@
       "apiVersion": "2021-06-01",
       "name": "[parameters('databaseName')]",
       "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_D2s_v3",
+        "tier": "GeneralPurpose"
+      },
       "properties": {
         "administratorLogin": "[parameters('adminUsername')]",
         "administratorLoginPassword": "[parameters('adminPassword')]",
@@ -60,17 +64,29 @@
       }
     },
     {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2021-02-01",
+      "name": "[concat(parameters('webAppName'), '-plan')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "tier": "Standard",
+        "name": "S1"
+      }
+    },
+    {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2021-02-01",
       "name": "[parameters('webAppName')]",
       "location": "[parameters('location')]",
       "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('webAppName'), '-plan'))]",
         "siteConfig": {
           "linuxFxVersion": "PYTHON|3.10"
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('databaseName'))]"
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('databaseName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', concat(parameters('webAppName'), '-plan'))]"
       ]
     },
     {
