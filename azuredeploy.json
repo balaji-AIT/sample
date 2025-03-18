@@ -51,8 +51,8 @@
       "name": "[parameters('databaseName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "GP_Standard_D2s_v3",
-        "tier": "GeneralPurpose"
+        "name": "F1",
+        "tier": "Free"
       },
       "properties": {
         "administratorLogin": "[parameters('adminUsername')]",
