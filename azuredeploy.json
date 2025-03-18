@@ -51,7 +51,7 @@
       "name": "[parameters('databaseName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "B_Standard_B1ms",
+        "name": "Standard_B1ms",
         "tier": "Burstable"
       },
       "properties": {
@@ -62,7 +62,8 @@
           "storageSizeGB": 32
         }
       }
-    },
+    }
+    ,
     {
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2021-02-01",
