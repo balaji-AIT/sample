@@ -51,8 +51,8 @@
       "name": "[parameters('databaseName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "Standard_B1ms",
-        "tier": "Burstable"
+        "name": "GP_Standard_D2s_v3",
+        "tier": "GeneralPurpose"
       },
       "properties": {
         "administratorLogin": "[parameters('adminUsername')]",
@@ -62,16 +62,19 @@
           "storageSizeGB": 32
         }
       }
-    }
-    ,
+    },
     {
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2021-02-01",
-      "name": "[concat(parameters('webAppName'), '-plan')]",
+      "name": "[parameters('webAppName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "tier": "Standard",
-        "name": "S1"
+        "name": "F1",
+        "tier": "Free"
+      },
+      "properties": {
+        "perSiteScaling": false,
+        "maximumElasticWorkerCount": 1
       }
     },
     {
@@ -80,14 +83,14 @@
       "name": "[parameters('webAppName')]",
       "location": "[parameters('location')]",
       "properties": {
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('webAppName'), '-plan'))]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('webAppName'))]",
         "siteConfig": {
           "linuxFxVersion": "PYTHON|3.10"
         }
       },
       "dependsOn": [
         "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('databaseName'))]",
-        "[resourceId('Microsoft.Web/serverfarms', concat(parameters('webAppName'), '-plan'))]"
+        "[resourceId('Microsoft.Web/serverfarms', parameters('webAppName'))]"
       ]
     },
     {
