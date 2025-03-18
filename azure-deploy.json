@@ -1,87 +1,51 @@
-{
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "webAppName": {
-      "type": "string",
-      "defaultValue": "fastapi-webapp-123",
-      "metadata": {
-        "description": "Name of the Azure Web App"
-      }
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "East US",
-      "metadata": {
-        "description": "Azure region for deployment"
-      }
-    },
-    "databaseName": {
-      "type": "string",
-      "defaultValue": "fastapidb",
-      "metadata": {
-        "description": "PostgreSQL database name"
-      }
-    },
-    "adminUsername": {
-      "type": "string",
-      "defaultValue": "pgadmin",
-      "metadata": {
-        "description": "Database admin username"
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Database admin password"
-      }
-    }
-  },
-  "resources": [
-    {
-      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
-      "apiVersion": "2021-06-01",
-      "name": "[parameters('databaseName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "administratorLogin": "[parameters('adminUsername')]",
-        "administratorLoginPassword": "[parameters('adminPassword')]",
-        "version": "12",
-        "storage": {
-          "storageSizeGB": 32
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Web/sites",
-      "apiVersion": "2021-02-01",
-      "name": "[parameters('webAppName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "siteConfig": {
-          "linuxFxVersion": "PYTHON|3.10"
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('databaseName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Web/sites/config",
-      "apiVersion": "2021-02-01",
-      "name": "[concat(parameters('webAppName'), '/web')]",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
-      ],
-      "properties": {
-        "appSettings": [
-          {
-            "name": "DATABASE_URL",
-            "value": "[concat('postgresql+asyncpg://', parameters('adminUsername'), ':', parameters('adminPassword'), '@', parameters('databaseName'), '.postgres.database.azure.com/', parameters('databaseName'))]"
-          }
-        ]
-      }
-    }
-  ]
-}
+name: Deploy FastAPI to Azure Web App
+
+on:
+  push:
+    branches:
+      - main  # Change if using another branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Create Resource Group (if not exists)
+      run: |
+        az group create --name my-resource-group --location "East US"
+
+    - name: Deploy ARM Template
+      uses: azure/arm-deploy@v1
+      with:
+        scope: resourcegroup
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        resourceGroupName: my-resource-group
+        template: azuredeploy.json
+        parameters: "adminPassword=${{ secrets.DB_ADMIN_PASSWORD }}"
+        deploymentMode: Incremental
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Deploy FastAPI App to Azure Web Apps
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: fastapi-webapp-123  # Change this
+        package: .
+        slot-name: production
