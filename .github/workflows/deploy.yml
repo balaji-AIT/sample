@@ -1,0 +1,43 @@
+name: Deploy FastAPI to Azure Web App
+
+on:
+  push:
+    branches:
+      - dev  # Change if using another branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Deploy ARM Template
+      uses: azure/arm-deploy@v1
+      with:
+        scope: resourcegroup
+        resourceGroupName: my-resource-group  # Change this
+        template: azuredeploy.json
+        parameters: "adminPassword=${{ secrets.DB_ADMIN_PASSWORD }}"
+        deploymentMode: Incremental
+        credentials: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy FastAPI App to Azure Web Apps
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: fastapi-webapp-123  # Change this
+        package: .
+        slot-name: production
+        credentials: ${{ secrets.AZURE_CREDENTIALS }}
