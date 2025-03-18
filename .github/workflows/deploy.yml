@@ -28,7 +28,7 @@ jobs:
       uses: azure/arm-deploy@v1
       with:
         scope: resourcegroup
-        resourceGroupName: my-resource-group  # Change this
+        resourceGroupName: my-sample-resource-group  # Change this
         template: azuredeploy.json
         parameters: "adminPassword=${{ secrets.DB_ADMIN_PASSWORD }}"
         deploymentMode: Incremental
