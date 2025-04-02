@@ -42,6 +42,7 @@ async def init_db():
 
 @app.get("/")
 async def root():
+    print('hello')
     return {"message": "FastAPI + PostgreSQL"}
 
 @app.post("/users/")
